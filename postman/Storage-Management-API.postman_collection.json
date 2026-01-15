@@ -1,0 +1,1510 @@
+{
+  "info": {
+    "_postman_id": "storage-management-api-collection",
+    "name": "Storage Management API",
+    "description": "Complete API collection for Storage Management System.\n\n## Features\n- User Authentication (Email & Google OAuth)\n- File Management\n- Folder Management\n- Storage Analytics\n- Secret Files with PIN protection\n\n## Getting Started\n1. Import this collection\n2. Import the environment\n3. Run 'Register' then 'Verify Email' or 'Login'\n4. Token will be automatically saved\n5. Test other endpoints\n\n## Base URL\n`http://localhost:5000/api`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verificationCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resetCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "folderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "secretFolderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fileId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "testuser@example.com",
+      "type": "string"
+    },
+    {
+      "key": "testPassword",
+      "value": "Test@123456",
+      "type": "string"
+    },
+    {
+      "key": "secretPin",
+      "value": "1234",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "description": "User authentication endpoints including registration, login, email verification, and password reset.",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Response has success property', function () {",
+                  "    pm.expect(response).to.have.property('success');",
+                  "});",
+                  "",
+                  "if (response.success) {",
+                  "    pm.test('Response has userId', function () {",
+                  "        pm.expect(response).to.have.property('userId');",
+                  "    });",
+                  "    ",
+                  "    // Save variables",
+                  "    pm.collectionVariables.set('userId', response.userId);",
+                  "    ",
+                  "    if (response.code) {",
+                  "        pm.collectionVariables.set('verificationCode', response.code);",
+                  "        console.log('Verification Code:', response.code);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account.\n\n**Request Body:**\n- `name` (required): User's full name\n- `email` (required): User's email address\n- `password` (required): User's password (min 6 characters)\n\n**Response:**\n- `success`: Boolean indicating success\n- `message`: Response message\n- `userId`: Created user's ID\n- `code`: Verification code (only in development mode)"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Registration successful. Please check your email for verification code.\",\n    \"userId\": \"65a1234567890abc1234567\",\n    \"code\": \"453621\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    pm.expect(response).to.have.property('token');",
+                  "});",
+                  "",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    console.log('Token saved successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{testEmail}}\",\n    \"code\": \"{{verificationCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-email"]
+            },
+            "description": "Verify user's email with the code sent during registration.\n\n**Request Body:**\n- `email` (required): User's email address\n- `code` (required): 6-digit verification code\n\n**Response:**\n- `success`: Boolean indicating success\n- `message`: Response message\n- `token`: JWT token for authentication\n- `user`: User object with id, name, email"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully\",\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n        \"id\": \"65a1234567890abc1234567\",\n        \"name\": \"Test User\",\n        \"email\": \"testuser@example.com\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has token', function () {",
+                  "    pm.expect(response).to.have.property('token');",
+                  "});",
+                  "",
+                  "pm.test('Response has user object', function () {",
+                  "    pm.expect(response).to.have.property('user');",
+                  "});",
+                  "",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    pm.collectionVariables.set('userId', response.user.id);",
+                  "    console.log('Token saved successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{testEmail}}\",\n    \"password\": \"{{testPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password.\n\n**Request Body:**\n- `email` (required): User's email address\n- `password` (required): User's password\n\n**Response:**\n- `success`: Boolean indicating success\n- `token`: JWT token for authentication\n- `user`: User object with id, name, email"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n        \"id\": \"65a1234567890abc1234567\",\n        \"name\": \"Test User\",\n        \"email\": \"testuser@example.com\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (response.code) {",
+                  "    pm.collectionVariables.set('resetCode', response.code);",
+                  "    console.log('Reset Code:', response.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{testEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Request a password reset code.\n\n**Request Body:**\n- `email` (required): User's email address\n\n**Response:**\n- `success`: Boolean indicating success\n- `message`: Response message\n- `code`: Reset code (only in development mode)"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Reset code sent to your email\",\n    \"code\": \"892345\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Response has success message', function () {",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{testEmail}}\",\n    \"code\": \"{{resetCode}}\",\n    \"newPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Reset password using the code sent via email.\n\n**Request Body:**\n- `email` (required): User's email address\n- `code` (required): 6-digit reset code\n- `newPassword` (required): New password\n\n**Response:**\n- `success`: Boolean indicating success\n- `message`: Response message"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Password reset successful. You can now login with your new password.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Google OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Initiate Google OAuth login.\n\n**Note:** This will redirect to Google login page. Use in browser, not Postman."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👤 User Management",
+      "description": "User profile management endpoints.",
+      "item": [
+        {
+          "name": "Get Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has user data', function () {",
+                  "    pm.expect(response).to.have.property('user');",
+                  "    pm.expect(response.user).to.have.property('email');",
+                  "    pm.expect(response.user).to.have.property('name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "profile"]
+            },
+            "description": "Get current user's profile.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Response:**\n- `success`: Boolean indicating success\n- `user`: User profile object"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"user\": {\n        \"_id\": \"65a1234567890abc1234567\",\n        \"name\": \"Test User\",\n        \"email\": \"testuser@example.com\",\n        \"isVerified\": true,\n        \"storageLimit\": 16106127360,\n        \"usedStorage\": 52428800,\n        \"avatar\": null,\n        \"createdAt\": \"2024-01-15T10:00:00.000Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Profile updated', function () {",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Name\",\n    \"avatar\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "profile"]
+            },
+            "description": "Update current user's profile.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Request Body:**\n- `name` (optional): Updated name\n- `avatar` (optional): Avatar URL"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"user\": {\n        \"_id\": \"65a1234567890abc1234567\",\n        \"name\": \"Updated Name\",\n        \"email\": \"testuser@example.com\",\n        \"avatar\": \"https://example.com/avatar.jpg\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set Secret PIN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('PIN set successfully', function () {",
+                  "    pm.expect(response.success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"pin\": \"{{secretPin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/set-pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "set-pin"]
+            },
+            "description": "Set a secret PIN for accessing secret files and folders.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Request Body:**\n- `pin` (required): 4-6 digit PIN"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Secret PIN set successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"{{testPassword}}\",\n    \"newPassword\": \"NewSecure@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "change-password"]
+            },
+            "description": "Change current user's password.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Request Body:**\n- `currentPassword` (required): Current password\n- `newPassword` (required): New password"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Password changed successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user/delete-account",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "delete-account"]
+            },
+            "description": "Delete current user's account and all associated data.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Warning:** This action is irreversible!"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Account deleted successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📁 Folder Management",
+      "description": "Folder creation and management endpoints.",
+      "item": [
+        {
+          "name": "Create Folder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Folder created', function () {",
+                  "    pm.expect(response).to.have.property('_id');",
+                  "    pm.expect(response).to.have.property('name');",
+                  "});",
+                  "",
+                  "if (response._id) {",
+                  "    pm.collectionVariables.set('folderId', response._id);",
+                  "    console.log('Folder ID saved:', response._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Work Documents\",\n    \"isSecret\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Create a new folder.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Request Body:**\n- `name` (required): Folder name\n- `parent` (optional): Parent folder ID for nested folders\n- `isSecret` (optional): Boolean for secret folder"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"_id\": \"65b2345678901bcd2345678\",\n    \"name\": \"Work Documents\",\n    \"user\": \"65a1234567890abc1234567\",\n    \"parent\": null,\n    \"isSecret\": false,\n    \"createdAt\": \"2024-01-15T14:30:00.000Z\",\n    \"updatedAt\": \"2024-01-15T14:30:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Subfolder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Subfolder has parent', function () {",
+                  "    pm.expect(response.parent).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Q1 Reports\",\n    \"parent\": \"{{folderId}}\",\n    \"isSecret\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Create a subfolder inside an existing folder."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Secret Folder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Folder is secret', function () {",
+                  "    pm.expect(response.isSecret).to.be.true;",
+                  "});",
+                  "",
+                  "if (response._id) {",
+                  "    pm.collectionVariables.set('secretFolderId', response._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Private Documents\",\n    \"isSecret\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Create a secret folder that requires PIN to access."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Folders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(response).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/folders",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders"]
+            },
+            "description": "Get all non-secret folders for the current user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n    {\n        \"_id\": \"65b2345678901bcd2345678\",\n        \"name\": \"Work Documents\",\n        \"user\": \"65a1234567890abc1234567\",\n        \"parent\": null,\n        \"isSecret\": false,\n        \"createdAt\": \"2024-01-15T14:30:00.000Z\"\n    },\n    {\n        \"_id\": \"65b3456789012cde3456789\",\n        \"name\": \"Personal Photos\",\n        \"user\": \"65a1234567890abc1234567\",\n        \"parent\": null,\n        \"isSecret\": false,\n        \"createdAt\": \"2024-01-15T15:00:00.000Z\"\n    }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Secret Folders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(response).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"pin\": \"{{secretPin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/secret",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders", "secret"]
+            },
+            "description": "Get secret folders. Requires PIN verification.\n\n**Note:** You must set a PIN first using the 'Set Secret PIN' endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Folder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Folder Name\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{folderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders", "{{folderId}}"]
+            },
+            "description": "Update a folder's name."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Folder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/folders/{{folderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["folders", "{{folderId}}"]
+            },
+            "description": "Delete a folder and all its contents."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📄 File Management",
+      "description": "File upload, download, and management endpoints.",
+      "item": [
+        {
+          "name": "Upload File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('File uploaded', function () {",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    pm.expect(response.file).to.have.property('_id');",
+                  "});",
+                  "",
+                  "if (response.file && response.file._id) {",
+                  "    pm.collectionVariables.set('fileId', response.file._id);",
+                  "    console.log('File ID saved:', response.file._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select a file to upload"
+                },
+                {
+                  "key": "folder",
+                  "value": "",
+                  "type": "text",
+                  "description": "Optional: Folder ID to upload to",
+                  "disabled": true
+                },
+                {
+                  "key": "isSecret",
+                  "value": "false",
+                  "type": "text",
+                  "description": "Set to 'true' for secret file"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload"]
+            },
+            "description": "Upload a file.\n\n**Headers:**\n- `Authorization`: Bearer token\n\n**Form Data:**\n- `file` (required): File to upload (File type)\n- `folder` (optional): Folder ID to upload to\n- `isSecret` (optional): 'true' or 'false'\n\n**Supported File Types:**\n- Images: jpg, jpeg, png, gif\n- Documents: pdf, doc, docx, txt\n\n**Max File Size:** 100MB"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"file\": {\n        \"_id\": \"65c5678901234ef5678901\",\n        \"originalName\": \"document.pdf\",\n        \"filename\": \"document-1705325400123-987654321.pdf\",\n        \"mimetype\": \"application/pdf\",\n        \"size\": 2457600,\n        \"type\": \"pdf\",\n        \"user\": \"65a1234567890abc1234567\",\n        \"folder\": null,\n        \"isFavorite\": false,\n        \"isSecret\": false,\n        \"createdAt\": \"2024-01-15T17:00:00.000Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Upload File to Folder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "folder",
+                  "value": "{{folderId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "isSecret",
+                  "value": "false",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload"]
+            },
+            "description": "Upload a file to a specific folder."
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Secret File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "isSecret",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "upload"]
+            },
+            "description": "Upload a secret file that requires PIN to access."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Files",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Response has files array', function () {",
+                  "    pm.expect(response).to.have.property('files');",
+                  "    pm.expect(response.files).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["files"]
+            },
+            "description": "Get all non-secret files for the current user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"count\": 2,\n    \"files\": [\n        {\n            \"_id\": \"65c5678901234ef5678901\",\n            \"originalName\": \"document.pdf\",\n            \"filename\": \"document-1705325400123.pdf\",\n            \"mimetype\": \"application/pdf\",\n            \"size\": 2457600,\n            \"type\": \"pdf\",\n            \"folder\": null,\n            \"isFavorite\": false,\n            \"isSecret\": false,\n            \"createdAt\": \"2024-01-15T17:00:00.000Z\"\n        },\n        {\n            \"_id\": \"65c6789012345ef6789012\",\n            \"originalName\": \"photo.jpg\",\n            \"filename\": \"photo-1705325500456.jpg\",\n            \"mimetype\": \"image/jpeg\",\n            \"size\": 3145728,\n            \"type\": \"image\",\n            \"folder\": null,\n            \"isFavorite\": true,\n            \"isSecret\": false,\n            \"createdAt\": \"2024-01-15T17:30:00.000Z\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Files by Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files?type=image",
+              "host": ["{{baseUrl}}"],
+              "path": ["files"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "image",
+                  "description": "Filter by type: image, pdf, document"
+                }
+              ]
+            },
+            "description": "Get files filtered by type.\n\n**Query Parameters:**\n- `type`: image, pdf, or document"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Favorite Files",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files?favorite=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["files"],
+              "query": [
+                {
+                  "key": "favorite",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get all favorite files."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Files by Folder",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files?folder={{folderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["files"],
+              "query": [
+                {
+                  "key": "folder",
+                  "value": "{{folderId}}"
+                }
+              ]
+            },
+            "description": "Get files in a specific folder."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Secret Files",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"pin\": \"{{secretPin}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/files/secret",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "secret"]
+            },
+            "description": "Get secret files. Requires PIN verification."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Files by Date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files/calendar?date=2024-01-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "calendar"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-01-15",
+                  "description": "Date in YYYY-MM-DD format"
+                }
+              ]
+            },
+            "description": "Get files uploaded on a specific date."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Favorite",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Favorite toggled', function () {",
+                  "    pm.expect(response.file).to.have.property('isFavorite');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files/{{fileId}}/favorite",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "{{fileId}}", "favorite"]
+            },
+            "description": "Toggle a file's favorite status."
+          },
+          "response": []
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files/download/{{fileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "download", "{{fileId}}"]
+            },
+            "description": "Download a file."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/files/{{fileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["files", "{{fileId}}"]
+            },
+            "description": "Delete a file."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Storage Analytics",
+      "description": "Storage statistics and calendar view endpoints.",
+      "item": [
+        {
+          "name": "Get Storage Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Has storage info', function () {",
+                  "    pm.expect(response).to.have.property('storageLimit');",
+                  "    pm.expect(response).to.have.property('usedStorage');",
+                  "    pm.expect(response).to.have.property('availableStorage');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/storage/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["storage", "stats"]
+            },
+            "description": "Get storage statistics for the current user."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"storageLimit\": 16106127360,\n    \"usedStorage\": 52428800,\n    \"availableStorage\": 16053698560,\n    \"usedPercentage\": \"0.33\",\n    \"totalFolders\": 3,\n    \"filesByType\": [\n        {\n            \"_id\": \"pdf\",\n            \"count\": 5,\n            \"totalSize\": 12582912\n        },\n        {\n            \"_id\": \"image\",\n            \"count\": 12,\n            \"totalSize\": 37748736\n        },\n        {\n            \"_id\": \"document\",\n            \"count\": 3,\n            \"totalSize\": 2097152\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Calendar Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(response).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/storage/calendar?month=1&year=2024",
+              "host": ["{{baseUrl}}"],
+              "path": ["storage", "calendar"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "1",
+                  "description": "Month (1-12)"
+                },
+                {
+                  "key": "year",
+                  "value": "2024",
+                  "description": "Year"
+                }
+              ]
+            },
+            "description": "Get files organized by date for calendar view."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n    {\n        \"_id\": \"2024-01-15\",\n        \"count\": 3,\n        \"files\": [\n            {\n                \"name\": \"document.pdf\",\n                \"type\": \"pdf\"\n            },\n            {\n                \"name\": \"photo.jpg\",\n                \"type\": \"image\"\n            }\n        ]\n    },\n    {\n        \"_id\": \"2024-01-14\",\n        \"count\": 2,\n        \"files\": [\n            {\n                \"name\": \"report.pdf\",\n                \"type\": \"pdf\"\n            }\n        ]\n    }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🏥 Health Check",
+      "description": "API health check endpoint.",
+      "item": [
+        {
+          "name": "API Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('API is running', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": [""]
+            },
+            "description": "Check if the API is running."
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"message\": \"Storage Management API\",\n    \"version\": \"1.0.0\",\n    \"endpoints\": {\n        \"auth\": \"/api/auth\",\n        \"user\": \"/api/user\",\n        \"folders\": \"/api/folders\",\n        \"files\": \"/api/files\",\n        \"storage\": \"/api/storage\"\n    }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
