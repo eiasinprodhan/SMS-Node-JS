@@ -442,7 +442,3 @@ For support, email eiasinprodhan@gmail.com or open an issue on GitHub.
 ---
 
 Made with ❤️ by [Eiasin Prodhan](https://github.com/eiasinprodhan)
-
-```
-
-```
