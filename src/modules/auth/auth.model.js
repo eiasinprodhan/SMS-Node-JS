@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   avatar: { type: String }
 }, { timestamps: true });
 
-// Fix: Remove next parameter and next() call when using async
+
 userSchema.pre('save', async function() {
   if (this.isModified('password') && this.password) {
     this.password = await bcrypt.hash(this.password, 10);
