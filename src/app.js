@@ -1,5 +1,5 @@
 const express = require('express');
-const cors = require('cors');
+const morgan = require('morgan');
 const passport = require('./config/passport');
 
 // Import routes
@@ -12,7 +12,7 @@ const storageRoutes = require('./modules/storage/storage.routes');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(morgan());
 app.use(express.json());
 app.use(passport.initialize());
 
